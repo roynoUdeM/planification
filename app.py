@@ -7,12 +7,13 @@ import os
 st.set_page_config(page_title="Système de Planification", page_icon="📝", layout="wide")
 st.title("📝 Système Intelligent de Planification (Univers Social)")
 
-# Détection de la clé API (Secrets Streamlit ou Variables d'environnement)
-default_key = ""
-if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
-    default_key = st.secrets["GEMINI_API_KEY"]
-elif os.environ.get("GEMINI_API_KEY"):
-    default_key = os.environ.get("GEMINI_API_KEY")
+# Détection sécurisée de la clé API (Environnement ou Secrets Streamlit Cloud)
+default_key = os.environ.get("GEMINI_API_KEY", "")
+try:
+    if "GEMINI_API_KEY" in st.secrets:
+        default_key = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    pass
 
 # --- Barre latérale ---
 with st.sidebar:
