@@ -30,7 +30,7 @@ with st.sidebar:
         st.rerun()
 
 if not api_key:
-    st.warning("Veuillez entrer une clé API valide.")
+    st.warning("Veuillez entrer une clé API valide dans les paramètres Secrets.")
     st.stop()
 
 # Initialisation du client de façon persistante pour éviter la fermeture de connexion
@@ -39,8 +39,6 @@ def get_client(key):
     return genai.Client(api_key=key)
 
 client = get_client(api_key)
-# Utiliser un vrai modèle existant sur l'API publique Google pour le Cloud
-MODEL_ID = 'gemini-2.5-pro' if os.environ.get("USE_PRO") else 'gemini-1.5-flash'
 
 # Chargement des fichiers de façon robuste (pour Streamlit Cloud)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -62,7 +60,7 @@ if "state" not in st.session_state:
     
     # Initialisation du Chat avec l'Agent 2
     st.session_state.chat = client.chats.create(
-        model='gemini-2.5-flash', # Mise à jour vers le dernier modèle standard
+        model='gemini-3.6-flash',
         config=types.GenerateContentConfig(
             system_instruction=prompt_agent2,
             temperature=0.3
@@ -73,7 +71,7 @@ if "state" not in st.session_state:
         response = st.session_state.chat.send_message("Bonjour, je suis un nouvel enseignant. Je veux de l'aide pour ma planification.")
         st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        st.error(f"Erreur de l'API Google : {str(e)}")
+        st.error(f"Erreur de l'API Google au démarrage : {str(e)}")
         st.stop()
 
 # --- Affichage du Chat ---
@@ -83,7 +81,7 @@ for message in st.session_state.messages:
     else:
         st.chat_message("user", avatar="👤").markdown(message["content"], unsafe_allow_html=True)
 
-# --- Logique selon l'État ---
+# --- Logique selon l'état ---
 if st.session_state.state == "INTERVIEW":
     if prompt := st.chat_input("Répondez à l'Agent Interrogateur..."):
         st.chat_message("user", avatar="👤").markdown(prompt, unsafe_allow_html=True)
@@ -99,7 +97,6 @@ if st.session_state.state == "INTERVIEW":
                 
                 # Détection de la balise de fin
                 if "[PROFIL_COMPLÉTÉ]" in response.text:
-                    # Extraction du profil (on retire la balise)
                     profil = response.text.replace("[PROFIL_COMPLÉTÉ]", "").strip()
                     st.markdown(profil, unsafe_allow_html=True)
                     st.session_state.messages.append({"role": "assistant", "content": profil})
@@ -116,7 +113,6 @@ elif st.session_state.state == "GENERATING_PLAN":
     with st.chat_message("assistant", avatar="🏗️"):
         st.info("L'Agent 3 (Architecte Curriculaire) analyse les documents du PFEQ et votre profil pour concevoir la planification...")
         
-        # Construction du prompt pour l'Agent 3
         prompt_final = f"""
 Voici le profil de l'enseignant récolté par l'Agent 2 :
 {st.session_state.profile_text}
@@ -129,7 +125,7 @@ Génère la macro-planification annuelle en respectant strictement tes contraint
         with st.spinner("Génération du tableau de planification (cela peut prendre quelques secondes)..."):
             try:
                 response_plan = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt_final,
                     config=types.GenerateContentConfig(
                         system_instruction=prompt_agent3,
