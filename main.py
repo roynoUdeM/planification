@@ -91,7 +91,11 @@ if st.session_state.state == "INTERVIEW":
 
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("L'Interrogateur réfléchit..."):
-                response = st.session_state.chat.send_message(prompt)
+                try:
+                    response = st.session_state.chat.send_message(prompt)
+                except Exception as e:
+                    st.error(f"Erreur de l'API Google sur la réponse : {str(e)}")
+                    st.stop()
                 
                 # Détection de la balise de fin
                 if "[PROFIL_COMPLÉTÉ]" in response.text:
