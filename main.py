@@ -55,22 +55,26 @@ prompt_agent2 = load_file("prompt_agent2.txt")
 prompt_agent3 = load_file("prompt_agent3.txt")
 knowledge_base = load_file("knowledge_base.txt")
 
-# --- Initialisation de l'État de l'application ---
+# --- Initialisation de l'état de l'application ---
 if "state" not in st.session_state:
     st.session_state.state = "INTERVIEW"
     st.session_state.messages = []
     
     # Initialisation du Chat avec l'Agent 2
     st.session_state.chat = client.chats.create(
-        model=MODEL_ID,
+        model='gemini-2.5-flash', # Mise à jour vers le dernier modèle standard
         config=types.GenerateContentConfig(
             system_instruction=prompt_agent2,
             temperature=0.3
         )
     )
-    # Lancement de la première question
-    response = st.session_state.chat.send_message("Bonjour, je suis un nouvel enseignant. Je veux de l'aide pour ma planification.")
-    st.session_state.messages.append({"role": "assistant", "content": response.text})
+    # Lancement de la première question avec capture d'erreur
+    try:
+        response = st.session_state.chat.send_message("Bonjour, je suis un nouvel enseignant. Je veux de l'aide pour ma planification.")
+        st.session_state.messages.append({"role": "assistant", "content": response.text})
+    except Exception as e:
+        st.error(f"Erreur de l'API Google : {str(e)}")
+        st.stop()
 
 # --- Affichage du Chat ---
 for message in st.session_state.messages:
@@ -119,18 +123,21 @@ Voici la base de connaissances officielle (RAG - PFEQ Monde contemporain) :
 Génère la macro-planification annuelle en respectant strictement tes contraintes et le format exigé.
 """
         with st.spinner("Génération du tableau de planification (cela peut prendre quelques secondes)..."):
-            response_plan = client.models.generate_content(
-                model=MODEL_ID,
-                contents=prompt_final,
-                config=types.GenerateContentConfig(
-                    system_instruction=prompt_agent3,
-                    temperature=0.2
+            try:
+                response_plan = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt_final,
+                    config=types.GenerateContentConfig(
+                        system_instruction=prompt_agent3,
+                        temperature=0.2
+                    )
                 )
-            )
-            st.markdown(response_plan.text, unsafe_allow_html=True)
-            st.session_state.messages.append({"role": "assistant", "content": response_plan.text})
-            
-            st.session_state.state = "DONE"
+                st.markdown(response_plan.text, unsafe_allow_html=True)
+                st.session_state.messages.append({"role": "assistant", "content": response_plan.text})
+                
+                st.session_state.state = "DONE"
+            except Exception as e:
+                st.error(f"Erreur de l'API Google lors de la génération : {str(e)}")
 
 elif st.session_state.state == "DONE":
     st.success("Planification terminée ! Vous pouvez recommencer à l'aide du bouton dans la barre latérale.")
