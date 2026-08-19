@@ -39,7 +39,8 @@ def get_client(key):
     return genai.Client(api_key=key)
 
 client = get_client(api_key)
-MODEL_ID = 'gemini-3.6-flash'
+# Utiliser un vrai modèle existant sur l'API publique Google pour le Cloud
+MODEL_ID = 'gemini-2.5-pro' if os.environ.get("USE_PRO") else 'gemini-1.5-flash'
 
 # Chargement des fichiers de façon robuste (pour Streamlit Cloud)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
