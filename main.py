@@ -15,11 +15,11 @@ try:
 except Exception:
     pass
 
+# Assignation de la clé API invisible
+api_key = default_key
+
 # --- Barre latérale ---
 with st.sidebar:
-    st.header("⚙️ Configuration")
-    api_key = st.text_input("Clé API Google AI Studio", type="password", value=default_key)
-    
     st.header("📋 Progression de l'orchestration")
     st.info("L'Agent 2 (Interrogateur) va collecter vos besoins. Ensuite, l'Agent 3 (Architecte) utilisera le RAG (documents du PFEQ) pour générer votre planification.")
     
