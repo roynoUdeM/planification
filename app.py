@@ -41,8 +41,10 @@ def get_client(key):
 client = get_client(api_key)
 MODEL_ID = 'gemini-3.6-flash'
 
-# Chargement des fichiers
-def load_file(filepath):
+# Chargement des fichiers de façon robuste (pour Streamlit Cloud)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def load_file(filename):
+    filepath = os.path.join(BASE_DIR, filename)
     if os.path.exists(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             return f.read()
